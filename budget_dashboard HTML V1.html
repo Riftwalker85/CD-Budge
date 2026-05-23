@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Budget Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0d;
+    --surface: #1a1a17;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --text: #f0ede6;
+    --muted: #7a7870;
+    --accent: #c8b560;
+    --accent-dim: rgba(200,181,96,0.12);
+    --green: #6bbf8e;
+    --green-dim: rgba(107,191,142,0.12);
+    --red: #e07070;
+    --red-dim: rgba(224,112,112,0.12);
+    --amber: #d4934a;
+    --amber-dim: rgba(212,147,74,0.12);
+    --mono: 'DM Mono', monospace;
+    --serif: 'Fraunces', Georgia, serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 32px 40px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-title {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .header-title span { color: var(--accent); font-style: italic; }
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .header-meta .liquid {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--green);
+    display: block;
+    text-align: right;
+  }
+
+  /* MAIN LAYOUT */
+  .main { padding: 32px 40px; display: grid; gap: 32px; }
+
+  /* KPI STRIP */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .kpi {
+    background: var(--surface);
+    padding: 20px 24px;
+  }
+  .kpi-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--text);
+  }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.amber { color: var(--amber); }
+  .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION TITLES */
+  .section-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+  }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+  /* PANEL */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px 24px;
+  }
+  .panel.full { grid-column: 1 / -1; }
+
+  /* PAY CYCLE TABLE */
+  .cycle-table { width: 100%; border-collapse: collapse; }
+  .cycle-table thead th {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 0 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .cycle-table thead th:last-child,
+  .cycle-table thead th:nth-child(3) { text-align: right; }
+  .cycle-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.1s;
+  }
+  .cycle-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .cycle-table tbody tr.current { background: var(--accent-dim); }
+  .cycle-table tbody tr.current td { color: var(--accent); }
+  .cycle-table tbody td {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .cycle-table tbody td:last-child,
+  .cycle-table tbody td:nth-child(3) { text-align: right; }
+  .cycle-table .cycle-date { color: var(--muted); font-size: 11px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .badge.ok { background: var(--green-dim); color: var(--green); }
+  .badge.low { background: var(--amber-dim); color: var(--amber); }
+  .badge.deficit { background: var(--red-dim); color: var(--red); }
+  .badge.future { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  /* BILLS LIST */
+  .bill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .bill-row:last-child { border-bottom: none; }
+  .bill-name { color: var(--text); }
+  .bill-due { color: var(--muted); font-size: 10px; margin-left: 8px; }
+  .bill-amount { color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* DEBT BARS */
+  .debt-item { margin-bottom: 16px; }
+  .debt-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+  .debt-name { color: var(--text); }
+  .debt-balance { color: var(--red); font-variant-numeric: tabular-nums; }
+  .debt-bar-bg {
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .debt-bar-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+
+  /* CATEGORY BREAKDOWN */
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cat-name { flex: 1; color: var(--text); }
+  .cat-amount { color: var(--accent); font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+  .cat-pct { color: var(--muted); font-size: 10px; min-width: 36px; text-align: right; }
+
+  /* MINI CHART (SVG sparkline) */
+  .spark-wrap { overflow: visible; }
+
+  /* UPCOMING BILLS */
+  .upcoming-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .upcoming-row:last-child { border-bottom: none; }
+  .upcoming-name { color: var(--text); }
+  .upcoming-date { color: var(--muted); font-size: 10px; }
+  .upcoming-amount { color: var(--text); font-variant-numeric: tabular-nums; }
+  .due-soon { color: var(--amber); }
+
+  /* TAX TRACKER */
+  .tax-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; }
+  .tax-row:last-child { border-bottom: none; }
+  .tax-label { color: var(--muted); }
+  .tax-val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .tax-val.red { color: var(--red); }
+  .tax-val.amber { color: var(--amber); }
+
+  /* SPARKLINE CHART */
+  .chart-area { width: 100%; height: 110px; position: relative; margin-top: 8px; }
+  svg.spark { width: 100%; height: 100%; overflow: visible; }
+
+  /* NOTE BAR */
+  .note-bar {
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,181,96,0.2);
+    border-radius: 3px;
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 16px; align-items: flex-start; }
+    .header-meta { text-align: left; }
+    .main { padding: 20px; }
+    .header { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Annual <span>Budget</span> — 2026</div>
+    <div class="header-sub">Pay cycle tracker · 15th &amp; end of month · Long Beach, CA</div>
+  </div>
+  <div class="header-meta">
+    <span class="liquid">$175.55</span>
+    Liquid after May 28 bills
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">Monthly Income</div>
+      <div class="kpi-value">$2,547</div>
+      <div class="kpi-sub">per paycheck cycle</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Monthly Bills</div>
+      <div class="kpi-value amber">$4,065</div>
+      <div class="kpi-sub">estimated recurring</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Debt</div>
+      <div class="kpi-value red">$34,370</div>
+      <div class="kpi-sub">across all accounts</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Pay Cycles w/ Data</div>
+      <div class="kpi-value green">2</div>
+      <div class="kpi-sub">May 15 + May 28</div>
+    </div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="note-bar">⚠ Jan–Apr 2026 cycles show $0 bill amounts — amounts likely tracked elsewhere. May 28 is the first fully-entered cycle. Jun+ uses projected values from your bill list.</div>
+
+  <!-- PAY CYCLE TABLE -->
+  <div class="panel full">
+    <div class="section-label">Pay cycle tracker · 2026</div>
+    <table class="cycle-table">
+      <thead>
+        <tr>
+          <th>Cycle</th>
+          <th>Pay Date</th>
+          <th>Remaining After Bills</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Jan 15</td><td class="cycle-date">Jan 15, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Jan 31</td><td class="cycle-date">Jan 31, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Feb 15</td><td class="cycle-date">Feb 15, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Feb 28</td><td class="cycle-date">Feb 28, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Mar 15</td><td class="cycle-date">Mar 15, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Mar 28</td><td class="cycle-date">Mar 28, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Apr 15</td><td class="cycle-date">Apr 15, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>Apr 28</td><td class="cycle-date">Apr 28, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr><td>May 15</td><td class="cycle-date">May 15, 2026</td><td>—</td><td><span class="badge future">no data</span></td></tr>
+        <tr class="current"><td>May 28 ◀ current</td><td class="cycle-date">May 28, 2026</td><td>$175.55</td><td><span class="badge low">low</span></td></tr>
+        <tr><td>Jun 15</td><td class="cycle-date">Jun 15, 2026</td><td>$767.98</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Jun 28</td><td class="cycle-date">Jun 28, 2026</td><td>$970.16</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Jul 15</td><td class="cycle-date">Jul 15, 2026</td><td>$1,887.59</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Jul 28</td><td class="cycle-date">Jul 28, 2026</td><td>$2,089.77</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Aug 15</td><td class="cycle-date">Aug 15, 2026</td><td>$3,007.20</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Aug 28</td><td class="cycle-date">Aug 28, 2026</td><td>$3,209.38</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Sep 15</td><td class="cycle-date">Sep 15, 2026</td><td>$4,126.81</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Sep 28</td><td class="cycle-date">Sep 28, 2026</td><td>$4,328.99</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Oct 15</td><td class="cycle-date">Oct 15, 2026</td><td>$5,246.42</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Oct 28</td><td class="cycle-date">Oct 28, 2026</td><td>$5,448.60</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Nov 15</td><td class="cycle-date">Nov 15, 2026</td><td>$6,366.03</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Nov 28</td><td class="cycle-date">Nov 28, 2026</td><td>$6,568.21</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Dec 15</td><td class="cycle-date">Dec 15, 2026</td><td>$7,485.64</td><td><span class="badge ok">projected ✓</span></td></tr>
+        <tr><td>Dec 28</td><td class="cycle-date">Dec 28, 2026</td><td>$7,687.82</td><td><span class="badge ok">projected ✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- LIQUID TREND CHART -->
+  <div class="panel full">
+    <div class="section-label">Remaining funds after bills · projected trajectory (May–Dec)</div>
+    <div class="chart-area">
+      <svg class="spark" viewBox="0 0 700 110" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="fill-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6bbf8e" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#6bbf8e" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- y axis: 0 to 8000, height 100px (padding 5px top) -->
+        <!-- points mapped: 175.55, 767.98, 970.16, 1887.59, 2089.77, 3007.20, 3209.38, 4126.81, 4328.99, 5246.42, 5448.60, 6366.03, 6568.21, 7485.64, 7687.82 -->
+        <!-- x: 15 evenly spaced points across 0-700 -->
+        <polygon
+          points="0,107.8 50,100.4 100,97.9 150,76.4 200,73.9 250,62.4 300,59.9 350,48.4 400,45.9 450,34.4 500,31.9 550,20.3 600,17.9 650,6.4 700,3.9 700,110 0,110"
+          fill="url(#fill-grad)"
+        />
+        <polyline
+          points="0,107.8 50,100.4 100,97.9 150,76.4 200,73.9 250,62.4 300,59.9 350,48.4 400,45.9 450,34.4 500,31.9 550,20.3 600,17.9 650,6.4 700,3.9"
+          fill="none"
+          stroke="#6bbf8e"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+        <!-- current marker -->
+        <circle cx="0" cy="107.8" r="3.5" fill="#d4934a"/>
+        <!-- labels -->
+        <text x="0" y="107" font-size="9" fill="#7a7870" font-family="monospace" text-anchor="middle">May 28</text>
+        <text x="350" y="44" font-size="9" fill="#7a7870" font-family="monospace" text-anchor="middle">Sep</text>
+        <text x="700" y="0" font-size="9" fill="#6bbf8e" font-family="monospace" text-anchor="end">Dec 28 $7,688</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- MONTHLY BILLS + DEBTS -->
+  <div class="two-col">
+
+    <div class="panel">
+      <div class="section-label">Monthly recurring bills</div>
+      <div class="bill-row"><span class="bill-name">Rent<span class="bill-due">due 1st</span></span><span class="bill-amount">$1,850.00</span></div>
+      <div class="bill-row"><span class="bill-name">Car Insurance<span class="bill-due">due 15th</span></span><span class="bill-amount">$247.20</span></div>
+      <div class="bill-row"><span class="bill-name">SoCal Edison<span class="bill-due">due 9th</span></span><span class="bill-amount">$164.38</span></div>
+      <div class="bill-row"><span class="bill-name">Federal Taxes<span class="bill-due">due 15th</span></span><span class="bill-amount">$167.00</span></div>
+      <div class="bill-row"><span class="bill-name">State Taxes<span class="bill-due">due 17th</span></span><span class="bill-amount">$200.00</span></div>
+      <div class="bill-row"><span class="bill-name">Student Loans<span class="bill-due">due 1st</span></span><span class="bill-amount">$333.63</span></div>
+      <div class="bill-row"><span class="bill-name">Car Payment<span class="bill-due">due 12th</span></span><span class="bill-amount">$333.14</span></div>
+      <div class="bill-row"><span class="bill-name">Spectrum Internet<span class="bill-due">due 10th</span></span><span class="bill-amount">$121.24</span></div>
+      <div class="bill-row"><span class="bill-name">Paypal Card<span class="bill-due">due 4th</span></span><span class="bill-amount">$134.00</span></div>
+      <div class="bill-row"><span class="bill-name">Motorcycle Insurance<span class="bill-due">due 2nd</span></span><span class="bill-amount">$78.33</span></div>
+      <div class="bill-row"><span class="bill-name">Capital One<span class="bill-due">due 2nd</span></span><span class="bill-amount">$44.00</span></div>
+      <div class="bill-row"><span class="bill-name">Discover Card<span class="bill-due">due 15th</span></span><span class="bill-amount">$44.00</span></div>
+      <div class="bill-row"><span class="bill-name">Amazon Card<span class="bill-due">due 18th</span></span><span class="bill-amount">$46.00</span></div>
+      <div class="bill-row"><span class="bill-name">Toyota Credit<span class="bill-due">due 3rd</span></span><span class="bill-amount">$51.00</span></div>
+      <div class="bill-row"><span class="bill-name">A New Era TMS<span class="bill-due">due 10th</span></span><span class="bill-amount">$50.00</span></div>
+      <div class="bill-row"><span class="bill-name">Utilities (gas/garbage)<span class="bill-due">due 30th</span></span><span class="bill-amount">$100.00</span></div>
+      <div class="bill-row"><span class="bill-name">Netflix<span class="bill-due">due 26th</span></span><span class="bill-amount">$24.99</span></div>
+      <div class="bill-row"><span class="bill-name">Hulu<span class="bill-due">due 15th</span></span><span class="bill-amount">$18.99</span></div>
+      <div class="bill-row"><span class="bill-name">YouTube Premium<span class="bill-due">due 8th</span></span><span class="bill-amount">$22.99</span></div>
+      <div class="bill-row"><span class="bill-name">Google Storage<span class="bill-due">due 8th</span></span><span class="bill-amount">$1.99</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-label">Outstanding debt balances</div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Student Loans</span><span class="debt-balance">$13,331.21</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:100%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Federal Taxes</span><span class="debt-balance">$10,766.33</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:80.8%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Car Payment</span><span class="debt-balance">$8,713.83</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:65.4%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">State Taxes</span><span class="debt-balance">$6,152.81</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:46.2%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Paypal Card</span><span class="debt-balance">$3,925.24</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:29.5%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Capital One</span><span class="debt-balance">$3,875.16</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:29.1%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Discover Card</span><span class="debt-balance">$1,553.48</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:11.7%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Amazon Card</span><span class="debt-balance">$1,486.09</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:11.2%"></div></div>
+      </div>
+      <div class="debt-item">
+        <div class="debt-header"><span class="debt-name">Toyota Credit</span><span class="debt-balance">$924.04</span></div>
+        <div class="debt-bar-bg"><div class="debt-bar-fill" style="width:6.9%"></div></div>
+      </div>
+
+      <!-- Tax tracker -->
+      <div class="section-label" style="margin-top:24px">Tax obligations</div>
+      <div class="tax-row"><span class="tax-label">Federal owed (Mar)</span><span class="tax-val red">$11,801.32</span></div>
+      <div class="tax-row"><span class="tax-label">Federal paid</span><span class="tax-val green">$167.00</span></div>
+      <div class="tax-row"><span class="tax-label">Federal remaining</span><span class="tax-val red">$11,634.32</span></div>
+      <div class="tax-row"><span class="tax-label">State owed</span><span class="tax-val amber">$5,986.61</span></div>
+      <div class="tax-row"><span class="tax-label">State paid</span><span class="tax-val green">$200.00</span></div>
+      <div class="tax-row"><span class="tax-label">State remaining</span><span class="tax-val amber">$5,786.61</span></div>
+    </div>
+
+  </div>
+
+  <!-- BILL CATEGORIES -->
+  <div class="panel full">
+    <div class="section-label">Spending categories · estimated monthly</div>
+    <div class="three-col" style="gap:12px">
+
+      <div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#e07070"></div>
+          <span class="cat-name">Housing (rent)</span>
+          <span class="cat-amount">$1,850</span>
+          <span class="cat-pct">45%</span>
+        </div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#d4934a"></div>
+          <span class="cat-name">Transportation</span>
+          <span class="cat-amount">$914</span>
+          <span class="cat-pct">22%</span>
+        </div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#c8b560"></div>
+          <span class="cat-name">Taxes (payment plan)</span>
+          <span class="cat-amount">$367</span>
+          <span class="cat-pct">9%</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#6bbf8e"></div>
+          <span class="cat-name">Utilities</span>
+          <span class="cat-amount">$386</span>
+          <span class="cat-pct">9%</span>
+        </div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#7a9fd4"></div>
+          <span class="cat-name">Credit cards</span>
+          <span class="cat-amount">$269</span>
+          <span class="cat-pct">6%</span>
+        </div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#b07ab8"></div>
+          <span class="cat-name">Subscriptions</span>
+          <span class="cat-amount">$69</span>
+          <span class="cat-pct">2%</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#5dada8"></div>
+          <span class="cat-name">Health / TMS</span>
+          <span class="cat-amount">$50</span>
+          <span class="cat-pct">1%</span>
+        </div>
+        <div class="cat-row">
+          <div class="cat-dot" style="background:#888"></div>
+          <span class="cat-name">Student loans</span>
+          <span class="cat-amount">$334</span>
+          <span class="cat-pct">8%</span>
+        </div>
+        <div class="cat-row" style="border-bottom:none; padding-top:12px; margin-top:4px">
+          <div class="cat-dot" style="background:transparent"></div>
+          <span class="cat-name" style="color:var(--muted)">Est. total/mo</span>
+          <span class="cat-amount" style="color:var(--text)">$4,239</span>
+          <span class="cat-pct"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="font-size:10px; color:var(--muted); letter-spacing:0.05em; padding-bottom:8px; border-top:1px solid var(--border); padding-top:16px;">
+    Data source: Annual Budget · Google Sheets · Last updated May 23, 2026 &nbsp;·&nbsp; Projected cycles use bill estimates from your monthly reference list &nbsp;·&nbsp; Accumulating balance model assumes no additional income beyond $2,547/cycle
+  </div>
+
+</div>
+</body>
+</html>
